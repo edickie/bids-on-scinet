@@ -44,9 +44,11 @@ But now how to use it?
 
 So singularity containers can (by default) do stuff in your home folder. But I don't wanna do that. Because my SciNet /home/ is not that big. So I will try to mount a folder into my $SCRATCH space for datalad to work inside...
 
+However... from what I can tell you cant get around installing the "superdataset" in you SciNet home. Luckily this is not too too big
+
 ```sh
 mkdir $SCRATCH/datalad
-singularity run -H $SCRATCH/datalad /scinet/course/ss2018/3_bm/8_publicdataneuro/datalad-datalad-master-fullmaster.simg install ///
+singularity run -B $SCRATCH/datalad /scinet/course/ss2018/3_bm/8_publicdataneuro/datalad-datalad-master-fullmaster.simg install ///
 ```
 
 *Note: datalad will refuse to do anything untill we first configure our git*
@@ -58,3 +60,19 @@ Replace the name and email in the next bit with your own
 git config --global user.name "My Name"
 git config --global user.email myemail@me.com
 ```
+
+##### Now that we have datalad working..we can install one openfmri dataset
+
+This bit installs the ds000003 folder structure and metadata into my $SCRATCH folder
+
+```sh
+singularity run -B $SCRATCH/datalad:/scratch /scinet/course/ss2018/3_bm/8_publicdataneuro/datalad-datalad-master-fullmaster.simg install -s ///openfmri/ds000003 /scratch/ds000003
+```
+
+This bit will actually pull the data for one subject into my scratch.
+
+```sh
+singularity run -B $SCRATCH/datalad:/scratch /scinet/course/ss2018/3_bm/8_publicdataneuro/datalad-datalad-master-fullmaster.simg get /scratch/ds000003/sub-01
+```
+
+
