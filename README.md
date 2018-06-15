@@ -75,4 +75,25 @@ This bit will actually pull the data for one subject into my scratch.
 singularity run -B $SCRATCH/datalad:/scratch /scinet/course/ss2018/3_bm/8_publicdataneuro/datalad-datalad-master-fullmaster.simg get /scratch/ds000003/sub-01
 ```
 
+# Part Deux - running BIDS apps
+
+So the BIDS apps singularity containers have been placed in:
+
+`/scinet/course/ss2018/3_bm/2_imageanalysis/singularity_containers`
+
+they are:
+
+bids_freesurfer_v6.0.1-4-2018-04-22-77961085015a.img
+poldracklab_fmriprep_1.1.1-2018-06-07-2f08547a0732.img
+poldracklab_mriqc_0.11.0-2018-06-05-1e4ac9792325.img
+
+So..mriqc I'm gonna bet (for any dataset with less than 20 subs) is probably run best by just sitting on one node in multiproc mode...
+
+Let's try it.
+
+code in:
+
+examples/sbatch_mriqc.sh
+
+
 
