@@ -27,3 +27,34 @@ There are two fun bits to hack on.
 ## Here we go
 
 Using datalad on SciNet
+
+So I've build a datalad container inside course repo
+
+```sh
+module load singularity
+cd /scinet/course/ss2018/3_bm/8_publicdataneuro
+singularity pull shub://datalad/datalad:fullmaster
+```
+
+This nicely created a container:
+
+`/scinet/course/ss2018/3_bm/8_publicdataneuro/datalad-datalad-master-fullmaster.simg`
+
+But now how to use it?
+
+So singularity containers can (by default) do stuff in your home folder. But I don't wanna do that. Because my SciNet /home/ is not that big. So I will try to mount a folder into my $SCRATCH space for datalad to work inside...
+
+```sh
+mkdir $SCRATCH/datalad
+singularity run -H $SCRATCH/datalad /scinet/course/ss2018/3_bm/8_publicdataneuro/datalad-datalad-master-fullmaster.simg install ///
+```
+
+*Note: datalad will refuse to do anything untill we first configure our git*
+  + I don't think you need a github account to run the next two lines
+ 
+Replace the name and email in the next bit with your own
+
+```sh
+git config --global user.name "My Name"
+git config --global user.email myemail@me.com
+```
