@@ -1,5 +1,5 @@
 # bids-on-scinet
-A collection of my notes about who to run BIDS apps on the SciNet Niagara cluster 
+A collection of my notes about who to run BIDS apps on the SciNet Niagara cluster
 
 ## stared at Computer Ontario Summer School 2018
 
@@ -7,23 +7,23 @@ So I put some singularity containers for public use on the cluster
 
 There are two fun bits to hack on.
 
-1. How to best stage BIDS data into SciNet (i.e. have SciNet installs of these things + wiki instructions for them) 
-  + awscli 
+1. How to best stage BIDS data into SciNet (i.e. have SciNet installs of these things + wiki instructions for them)
+  + awscli
   + s3cmd
-  + datalad 
-  
+  + datalad
+
  Another part of this would be potentially staging input data to the Niagara burst buffer.
  *Note: the processing nodes cannot see the internet, so data staging must happen before job submission*
 
 2. How to run BIDS apps on SciNet.
   + write some template singularity submission scripts for SciNet slurm system
   + bench marking different BIDS apps to see the best way to run them on SciNet
-       + this has to do with the fact that SciNet has "fat" nodes with 40 CPU's each and 12 hrs job allocation. 
-       + What is the optimal number of participants to process per node? 
+       + this has to do with the fact that SciNet has "fat" nodes with 40 CPU's each and 12 hrs job allocation.
+       + What is the optimal number of participants to process per node?
        + should they each be individual containers or multproc?
        + what the optimal walltime to ask for?
        + should some BIDS apps (i.e. fmriprep) be chunked into smaller walltimes, & different number of participants per chunk? (i.e. anat only then fMRI?)
-       
+
 ## Here we go
 
 Using datalad on SciNet
@@ -53,7 +53,7 @@ singularity run -B $SCRATCH/datalad /scinet/course/ss2018/3_bm/8_publicdataneuro
 
 *Note: datalad will refuse to do anything untill we first configure our git*
   + I don't think you need a github account to run the next two lines
- 
+
 Replace the name and email in the next bit with your own
 
 ```sh
@@ -87,13 +87,14 @@ bids_freesurfer_v6.0.1-4-2018-04-22-77961085015a.img
 poldracklab_fmriprep_1.1.1-2018-06-07-2f08547a0732.img
 poldracklab_mriqc_0.11.0-2018-06-05-1e4ac9792325.img
 
+## MRIQC
+
 So..mriqc I'm gonna bet (for any dataset with less than 20 subs) is probably run best by just sitting on one node in multiproc mode...
+
+Note: according to the profiling that is reported [here](https://mriqc.readthedocs.io/en/latest/running.html#requesting-resources) mriqc takes about 45 minutes and *most* of the computation uses one CPU per scan (i.e. one per run).
 
 Let's try it.
 
 code in:
 
 examples/sbatch_mriqc.sh
-
-
-
