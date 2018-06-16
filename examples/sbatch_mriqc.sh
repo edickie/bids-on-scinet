@@ -12,20 +12,27 @@ module load singularity
 dataset="ds000003"
 
 ## build the mounts
+mkdir -p $SCRATCH/sing_home/mri_qc
 mkdir -p $SCRATCH/bids_outputs/${dataset}/mriqc
+mkdir -p $SCRATCH/bids_work/${dataset}/mriqc
+
 
 singularity run \
--H $SLURM_SUBMIT_DIR \
--B $SCRATCH/bids_outputs/${dataset}:/bids \
+-H $SCRATCH/sing_home/mri_qc \
+-B $SCRATCH/datalad/${dataset}/:/bids/ \
 -B $SCRATCH/bids_outputs/${dataset}/mriqc:/output \
+-B $SCRATCH/bids_work/${dataset}/mriqc:/work \
 /scinet/course/ss2018/3_bm/2_imageanalysis/singularity_containers/poldracklab_mriqc_0.11.0-2018-06-05-1e4ac9792325.img \
     /bids /output participant \
-    --no-sub --n_procs 40 --profile
+    --no-sub --n_procs 40 --profile \
+    -w /work
 
 singularity run \
--H $SLURM_SUBMIT_DIR \
--B $SCRATCH/bids_outputs/${dataset}:/bids \
--B $SCRATCH/bids_outputs/${dataset}/mriqc:/output \
-/scinet/course/ss2018/3_bm/2_imageanalysis/singularity_containers/poldracklab_mriqc_0.11.0-2018-06-05-1e4ac9792325.img \
-    /bids /output group \
-    --no-sub --n_procs 40 --profile
+  -H $SCRATCH/sing_home/mri_qc \
+  -B $SCRATCH/datalad/${dataset}/:/bids/ \
+  -B $SCRATCH/bids_outputs/${dataset}/mriqc:/output \
+  -B $SCRATCH/bids_work/${dataset}/mriqc:/work \
+  /scinet/course/ss2018/3_bm/2_imageanalysis/singularity_containers/poldracklab_mriqc_0.11.0-2018-06-05-1e4ac9792325.img \
+      /bids /output group \
+      --no-sub --n_procs 40 --profile \
+      -w /work
