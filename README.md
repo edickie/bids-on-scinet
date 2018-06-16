@@ -98,3 +98,11 @@ Let's try it.
 code in:
 
 examples/sbatch_mriqc.sh
+
+## FMRIPREP
+
+Looking at the early outputs.. If given the whole dataset (20 subs). It runs the first 8 in parallel first.
+
+So we should chunk jobs into groups of 8 subjects?
+
+examples/sbatch_fmriprep_anat.sh
