@@ -106,9 +106,30 @@ Looking at the early outputs.. If given the whole dataset (20 subs). It runs the
 
 The freesurfer calls have an embedded omp thread = 8 which would imply up to 5 would compute at the same time
 
-note: --omp-nthreads 80 will cause only one freesurfer subject to run at a time..fail
+note: --omp-nthreads 80 will cause only one freesurfer subject to run at a time..fail do not do that
 
-If we add hyperthreading cpus=80 than more ~12 will run at first.
+So given this..I decided to chunk into groups of 10 subjects (with the freesurfer steps using openmp of 8 task)
+
+We tried this by either doing the 8 subjects in one fmriprep call  OR using parallel to call fmriprep 8 times.
+We turns out that using 8 calls (with gnu-parallel) actually did a little better than using one call. Which is great because this means the gnu-parallel version is easier to scale (using qbatch).
+
+gnuparallel version
+
+JobID    JobName    Account    Elapsed  MaxVMSize     MaxRSS  SystemCPU    UserCPU ExitCode
+------------ ---------- ---------- ---------- ---------- ---------- ---------- ---------- --------
+158328         fmriprep def-arisv+   10:01:23                        00:50.613  28:13.236      0:0
+158328.batch      batch def-arisv+   10:01:23  63250740K  24662340K  00:50.613  28:13.236      0:0
+
+fmriprep-multiproc version
+
+JobID    JobName    Account    Elapsed  MaxVMSize     MaxRSS  SystemCPU    UserCPU ExitCode
+------------ ---------- ---------- ---------- ---------- ---------- ---------- ---------- --------
+158327         fmriprep def-arisv+   10:28:36                        00:38.818  26:32.419      0:0
+158327.batch      batch def-arisv+   10:28:36  67817464K  27573820K  00:38.818  26:32.419      0:0
+
+One issue here is that we are writing the working dir to $SCRATCH. This might be a lot faster if it was written to a faster drive (ramdisk or the burst buffer)
+
+OK so lets's run two other versions with less subjects (8 and 5) in parallel, using a tmpdir using ramdisk as the workdir.
 
 So we should chunk jobs into groups of 8 subjects?
 
