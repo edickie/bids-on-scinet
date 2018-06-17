@@ -15,8 +15,8 @@ export freesufer_license=$HOME/.licenses/freesurfer/license.txt
 
 ## build the mounts
 sing_home=$SCRATCH/sing_home/fmriprep
-outdir=$SCRATCH/bids_outputs/${dataset}/fmriprep_m10
-workdir=$SCRATCH/bids_work/${dataset}/fmriprep_m10
+outdir=$SCRATCH/bids_outputs/${dataset}/fmriprep_p10
+workdir=$SCRATCH/bids_work/${dataset}/fmriprep_p10
 
 mkdir -p ${sing_home} ${outdir} ${workdir}
 # singularity run \
