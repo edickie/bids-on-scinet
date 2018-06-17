@@ -42,14 +42,6 @@ This nicely created a container:
 
 But now how to use it?
 
-So singularity containers can (by default) do stuff in your home folder. But I don't wanna do that. Because my SciNet /home/ is not that big. So I will try to mount a folder into my $SCRATCH space for datalad to work inside...
-
-However... from what I can tell you cant get around installing the "superdataset" in you SciNet home. Luckily this is not too too big
-
-```sh
-mkdir $SCRATCH/datalad
-singularity run -B $SCRATCH/datalad /scinet/course/ss2018/3_bm/8_publicdataneuro/datalad-datalad-master-fullmaster.simg install ///
-```
 
 *Note: datalad will refuse to do anything untill we first configure our git*
   + I don't think you need a github account to run the next two lines
@@ -60,6 +52,15 @@ Replace the name and email in the next bit with your own
 git config --global user.name "My Name"
 git config --global user.email myemail@me.com
 ```
+
+This action creates a hidden file into your home `~/.gitconfig`.
+
+```sh
+module load singularity
+singularity run /scinet/course/ss2018/3_bm/8_publicdataneuro/datalad-datalad-master-fullmaster.simg install ///
+```
+
+This will create the "superdataset" inside `$SCRATCH/datasets.datalad.org`
 
 ##### Now that we have datalad working..we can install one openfmri dataset
 
@@ -102,6 +103,12 @@ examples/sbatch_mriqc.sh
 ## FMRIPREP
 
 Looking at the early outputs.. If given the whole dataset (20 subs). It runs the first 8 in parallel first.
+
+The freesurfer calls have an embedded omp thread = 8 which would imply up to 5 would compute at the same time
+
+note: --omp-nthreads 80 will cause only one freesurfer subject to run at a time..fail
+
+If we add hyperthreading cpus=80 than more ~12 will run at first.
 
 So we should chunk jobs into groups of 8 subjects?
 

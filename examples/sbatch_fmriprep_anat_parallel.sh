@@ -8,6 +8,7 @@
 cd $SLURM_SUBMIT_DIR
 
 module load singularity
+module load gnu-parallel/20180322
 
 dataset="ds000003"
 export freesufer_license=$HOME/.licenses/freesurfer/license.txt
@@ -32,8 +33,7 @@ mkdir -p ${sing_home} ${outdir} ${workdir}
 #     --output-space T1w template \
 #     --work-dir /work \
 #     --notrack --fs-license-file /freesurfer_license.txt --resource-monitor
-
-singularity run \
+parallel -j 10 "singularity run \
   -H ${sing_home} \
   -B $SCRATCH/datalad/${dataset}:/bids \
   -B ${outdir}:/output \
@@ -41,10 +41,11 @@ singularity run \
   -B ${workdir}:/work \
   /scinet/course/ss2018/3_bm/2_imageanalysis/singularity_containers/poldracklab_fmriprep_1.1.1-2018-06-07-2f08547a0732.img \
       /bids /output participant \
-      --participant_label 01 02 03 04 05 06 07 08 09 10 \
+      --participant_label {} \
       --anat-only \
-      --nthreads 80 \
+      --nthreads 8 \
       --omp-nthreads 8 \
       --output-space T1w template \
       --work-dir /work \
-      --notrack --fs-license-file /freesurfer_license.txt --resource-monitor
+      --notrack --fs-license-file /freesurfer_license.txt --resource-monitor" \
+      ::: "01" "02" "03" "04" "05" "06" "07" "08" "09" "10"
