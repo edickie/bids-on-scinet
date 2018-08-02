@@ -17,27 +17,25 @@ export ciftify_container=/scinet/course/ss2018/3_bm/2_imageanalysis/singularity_
 ## build the mounts
 sing_home=$SCRATCH/sing_home/ciftify
 outdir=$SCRATCH/bids_outputs/${dataset}/fmriprep_p08
-workdir=$BBUFFER/${dataset}/fmriprep_p08
+workdir=$BBUFFER/${dataset}
 
 mkdir -p ${sing_home} ${outdir} ${workdir}
 
 #trap the termination signal, and call the function 'trap_term' when
 # that happens, so results may be saved.
-trap cleanup_ramdisk TERM
+## note..due to a silly bug in datman..the folder above the workdir needs to be readable
 
 parallel -j 8 "singularity run \
   -H ${sing_home} \
   -B ${bids_input}:/bids \
   -B ${outdir}:/output \
   -B ${freesufer_license}:/freesurfer_license.txt \
-  -B ${workdir}:/work \
+  -B ${BBUFFER}:/workdir \
   ${ciftify_container} \
       /bids /output participant \
-      --participant_label=05 \
-      --fmriprep-workdir /work \
-      --fs-license /license_file.txt \
+      --participant_label={} \
+      --fmriprep-workdir /workdir/${dataset} \
+      --fs-license /freesurfer_license.txt \
       --n_cpus 10 \
-      --fmriprep-args='--use-aroma'" \
+      --fmriprep-args='--use-aroma" \
       ::: "01" "02" "03" "04" "05" "06" "07" "08"
-
-cleanup_ramdisk
