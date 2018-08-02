@@ -21,7 +21,7 @@ workdir=$BBUFFER/${dataset}/fmriprep112_p08
 mkdir -p ${sing_home} ${outdir} ${workdir}
 
 ## acutally running the tasks (note we are using gnu-parallel to run across participants)
-parallel -j 8 "echo singularity run \
+parallel -j 8 "singularity run \
   -H ${sing_home} \
   -B $SCRATCH/datalad/${dataset}:/bids \
   -B ${outdir}:/output \
