@@ -37,5 +37,5 @@ parallel -j 8 "singularity run \
       --fmriprep-workdir /workdir/${dataset} \
       --fs-license /freesurfer_license.txt \
       --n_cpus 10 \
-      --fmriprep-args='--use-aroma" \
+      --fmriprep-args='--use-aroma'" \
       ::: "01" "02" "03" "04" "05" "06" "07" "08"
