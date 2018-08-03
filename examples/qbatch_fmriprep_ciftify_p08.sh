@@ -25,8 +25,8 @@ mkdir -p ${sing_home} ${outdir} ${workdir}
 #trap the termination signal, and call the function 'trap_term' when
 # that happens, so results may be saved.
 ## note..due to a silly bug in datman..the folder above the workdir needs to be readable
-cd ${indir}; ls -1d sub* | sed 's/sub-//g' | \
-  parallel -j 8 "singularity run \
+cd ${outdir}/fmriprep; ls -1d sub* | sed 's/sub-//g' | \
+  parallel -j "echo singularity run \
     -H ${sing_home} \
     -B ${bids_input}:/bids \
     -B ${outdir}:/output \
