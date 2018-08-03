@@ -1,4 +1,5 @@
 # source the conda env with nothing but qbatch in it
+module load anaconda3
 source activate /scinet/course/ss2018/3_bm/2_imageanalysis/qbatch_env
 
 ## set these environment variables as presets
