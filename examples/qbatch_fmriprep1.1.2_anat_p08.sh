@@ -40,7 +40,7 @@ cd ${indir}; ls -1d sub* | sed 's/sub-//g' | \
       --work-dir /workdir \
       --notrack --fs-license-file /freesurfer_license.txt" | \
       qbatch \
-       --walltime 00:11:00 --nodes 1 --ppj 80 \
+       --walltime 11:00:00 --nodes 1 --ppj 80 \
        --chunksize 8 --cores 8 \
        --workdir $sing_home \
        --jobname ${dataset}_fmriprep_anat \
