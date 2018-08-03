@@ -8,7 +8,6 @@
 source ${HOME}/code/bids-on-scinet/env/source_qbatch_python_env.sh
 module load gnu-parallel/20180322
 
-
 ## change this to the name of your dataset
 dataset="ds000003"
 
@@ -16,13 +15,15 @@ dataset="ds000003"
 export freesufer_license=$HOME/.licenses/freesurfer/license.txt
 
 ## set all the folder paths
-sing_home=$SCRATCH/sing_home/${dataset}
-indir=$SCRATCH/datalad/${dataset}
-outdir=$SCRATCH/bids_outputs/${dataset}/fmriprep_q08
-workdir=$BBUFFER/fmriprep_q08/${dataset}/
+sing_home=$SCRATCH/sing_home/${dataset}              # this is where your logs will show up
+indir=$SCRATCH/datalad/${dataset}     # this is you bids formatted input data
+outdir=$SCRATCH/bids_outputs/${dataset}/fmriprep_q08  # this is the path to your output directory
+workdir=$BBUFFER/fmriprep_q08/${dataset}/      # this is where the fmriprep "working directory" goes..note we are using scinet's Burst Buffer for this
+
+## this line acutally makes all the folders
 mkdir -p ${sing_home} ${outdir} ${workdir}
 
-## acutally running the tasks (note we are using gnu-parallel to run across participants)
+## acutally builds a submission script and submits all subjects the tasks (note we are using qbatch and gnu-parallel to run across participants)
 cd ${indir}; ls -1d sub* | sed 's/sub-//g' | \
   parallel "echo singularity run \
   -H ${sing_home} \
