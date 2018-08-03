@@ -26,7 +26,7 @@ mkdir -p ${sing_home} ${outdir} ${workdir}
 # that happens, so results may be saved.
 ## note..due to a silly bug in datman..the folder above the workdir needs to be readable
 cd ${outdir}/fmriprep; ls -1d sub* | sed 's/sub-//g' | \
-  parallel -j "echo singularity run \
+  parallel "echo singularity run \
     -H ${sing_home} \
     -B ${bids_input}:/bids \
     -B ${outdir}:/output \
