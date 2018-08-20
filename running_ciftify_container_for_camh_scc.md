@@ -25,7 +25,7 @@ for SID in $SIDlist; do
     --fmriprep-workdir /output/ZHH/work \
     --fs-license /license_file.txt \
     --n_cpus 4 \
-    --fmriprep-args="--use-aroma" --debug --dry-run  | \
+    --fmriprep-args="--use-aroma"  | \
     qsub -l walltime=23:00:00,nodes=1:ppn=4 -N ciftify_$SID -j oe -o ${outputdir}/ZHH/logs;
 done
 ```
