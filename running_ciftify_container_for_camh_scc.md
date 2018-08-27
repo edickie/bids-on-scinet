@@ -51,13 +51,150 @@ Then we can just rerun all participants to insure that all qc images are generat
 Note: if recon_all did finish..it is on the output folder..if not it is in the workdir..
 
 ```sh
+bidsraw=/KIMEL/tigrlab/scratch/dmiranda/BIDS_ZHH
 outdir=/KIMEL/tigrlab/scratch/edickie/saba_PINT/ciftify_fmriprep/ZHH/out/
-doneReconAll=`cd ${outdir}/freesurfer ; ls -1d sub* | sort`
+cd ${bidsraw} ; ls -1d sub* | sort > ${outdir}/subsIn.txt
 
-for subject in $doneReconAll; do
+outdir=/KIMEL/tigrlab/scratch/edickie/saba_PINT/ciftify_fmriprep/ZHH/out/
+cd ${outdir}/freesurfer ; ls -1d sub* | sort > ${outdir}/doneReconAll.txt
+
+cd $outdir; diff subsIn.txt doneReconAll.txt
+```
+
+This prints the list of subjects who failed recon_all for some reason..
+
+I got:
+
+```
+106,108d105
+< sub-7740
+< sub-7749
+< sub-7793
+159,161d155
+< sub-8799
+< sub-8831
+< sub-8838
+```
+
+Now.. let us look through everyone who may not have finished ciftify_recon_all
+
+```sh
+for subject in `cat ${outdir}/doneReconAll.txt`; do
+ cralog_lastline=`tail -3 ${outdir}/ciftify/$subject/cifti_recon_all.log | head -1`
+ echo $subject,"$cralog_lastline"
+done | grep -v Done > ${outdir}/ciftify_recon_all_errors.csv
+```
+Note: this file I opened in libreoffice and looked over. I decided that most of these files I should just delete the whole ciftify folder for:
+
+```sh
+todelete="sub-10391
+sub-10563
+sub-108
+sub-6891
+sub-7252
+sub-8695
+sub-8780
+sub-9284
+sub-9566
+sub-10505
+sub-10807
+sub-11382
+sub-6999
+sub-7576
+sub-7735
+sub-7870
+sub-8500
+sub-9045
+sub-9066
+sub-9104
+sub-9141
+sub-9332
+sub-9373
+sub-9404
+sub-9405
+sub-9606
+sub-9714
+sub-9718
+sub-10311
+sub-11316
+sub-9186
+sub-9612
+sub-11277
+sub-10245
+sub-9333
+sub-8887
+sub-8403
+sub-8017
+sub-9275
+sub-10870
+sub-11410
+sub-6904
+sub-6942
+sub-7051
+sub-7807
+sub-8349
+sub-8395
+sub-84
+sub-8418
+sub-8484
+sub-8557
+sub-8974
+sub-8999
+sub-9027
+sub-9229
+sub-9436
+sub-9591
+sub-9724
+sub-9799
+sub-7991
+sub-9577"
+
+## note: I always run this first to check that everything looks good!
+for sub in $todelete; do
+  echo rm -r ${outdir}/ciftify/${sub}
+done
+
+## then this deletes
+for sub in $todelete; do
+  rm -r ${outdir}/ciftify/${sub}
+done
+```
+
+
+
+```sh
+for subject in `cat ${outdir}/doneReconAll.txt`; do
  cralog_lastline=`tail -3 ${outdir}/ciftify/$subject/cifti_recon_all.log | head -1`
  echo $subject $cralog_lastline
-done | grep -v Done
+done | grep Done | sort | cut -d " " -f 1 > ${outdir}/done_ciftify_anat.txt
 
-ResultsLogs=`cd ${outdir}/ciftify/sub*/MNINonLinear/Results/*/*.log`
+
+for subject in `cat ${outdir}/done_ciftify_anat.txt`; do
+  ResultsLogs=`cd ${outdir}/ciftify/${subject}/MNINonLinear/Results/*/*.log`
+  for ResultLog in ${ResultLogs}; do
+  cralog_lastline=`tail -3 ${ResultLog} | head -1`
+  echo ${subject} ${ResultLog} ${cralog_lastline}
+done
+done
+```
+
+```sh
+fmrilogs=`ls ${outdir}/ciftify/sub-*/MNINonLinear/Results/*/ciftify_subject_fmri.log`
+for log in $fmrilogs; do
+  cralog_lastline=`tail -3 ${log} | head -1`
+  echo ${log} ${cralog_lastline}
+done | grep -v Done
+```
+
+# The above line gave me a small number to delete:
+
+```
+/KIMEL/tigrlab/scratch/edickie/saba_PINT/ciftify_fmriprep/ZHH/out//ciftify/sub-10245/MNINonLinear/Results/ses-03_task-rest_bold/ciftify_subject_fmri.log Path: /output/ZHH/out/ciftify/sub-10245/MNINonLinear/fsaverage_LR32k
+/KIMEL/tigrlab/scratch/edickie/saba_PINT/ciftify_fmriprep/ZHH/out//ciftify/sub-11277/MNINonLinear/Results/ses-01_task-rest_bold/ciftify_subject_fmri.log Path: /output/ZHH/out/ciftify/sub-11277/MNINonLinear/fsaverage_LR32k
+/KIMEL/tigrlab/scratch/edickie/saba_PINT/ciftify_fmriprep/ZHH/out//ciftify/sub-7852/MNINonLinear/Results/ses-01_task-rest_bold/ciftify_subject_fmri.log -------------------------------------------------------------
+/KIMEL/tigrlab/scratch/edickie/saba_PINT/ciftify_fmriprep/ZHH/out//ciftify/sub-9725/MNINonLinear/Results/ses-01_task-rest_bold/ciftify_subject_fmri.log Running: wb_command -volume-to-surface-mapping /output/ZHH/out/ciftify/sub-9725/MNINonLinear/Results/ses-01_task-rest_bold/ses-01_task-rest_bold.nii.gz /output/ZHH/out/ciftify/sub-9725/MNINonLinear/Native/sub-9725.R.midthickness.native.surf.gii /tmp/tmpyyx2rat2/MNINonLinear/native/sub-9725.R.ses-01_task-rest_bold.native.func.gii -ribbon-constrained /output/ZHH/out/ciftify/sub-9725/MNINonLinear/Native/sub-9725.R.white.native.surf.gii /output/ZHH/out/ciftify/sub-9725/MNINonLinear/Native/sub-9725.R.pial.native.surf.gii -volume-roi /tmp/tmpyyx2rat2/goodvoxels.nii.gz
+[edickie@scclogin02 out]$ rm -r /KIMEL/tigrlab/scratch/edickie/saba_PINT/ciftify_fmriprep/ZHH/out//ciftify/sub-10245/MNINonLinear/Results/ses-03_task-rest_bold
+[edickie@scclogin02 out]$ rm -r /KIMEL/tigrlab/scratch/edickie/saba_PINT/ciftify_fmriprep/ZHH/out//ciftify/sub-11277/MNINonLinear/Results/ses-01_task-rest_bold
+[edickie@scclogin02 out]$ rm -r /KIMEL/tigrlab/scratch/edickie/saba_PINT/ciftify_fmriprep/ZHH/out//ciftify/sub-7852/MNINonLinear/Results/ses-01_task-rest_bold
+[edickie@scclogin02 out]$ rm -r /KIMEL/tigrlab/scratch/edickie/saba_PINT/ciftify_fmriprep/ZHH/out//ciftify/sub-9725/MNINonLinear/Results/ses-01_task-rest_bold
 ```
