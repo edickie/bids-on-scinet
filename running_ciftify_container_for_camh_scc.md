@@ -29,3 +29,35 @@ for SID in $SIDlist; do
     qsub -l walltime=23:00:00,nodes=1:ppn=4 -N ciftify_$SID -j oe -o ${outputdir}/ZHH/logs;
 done
 ```
+
+## but..23hrs may not have been enough for many subjects..
+
+so we need a script to delete half completed outputs and rerun
+
+There are three types of half completed outputs..
+
+1. freesurfer is still running
+    + in which case we need to delete `*Running` file as well as ciftify outputs
+2. ciftify_recon_all didn't finish
+    + we need to delete all ciftify outputs for that participant
+    + if this is due to unifinished freesurfer we should remove the `*IsRunning`
+3. ciftify_subject_fmri didn't finish
+    + we need to delete the fmri/Results for this person
+
+Then we can just rerun all participants to insure that all qc images are generated..
+
+## 1. remove downstream from unifinished recon_all..
+
+Note: if recon_all did finish..it is on the output folder..if not it is in the workdir..
+
+```sh
+outdir=/KIMEL/tigrlab/scratch/edickie/saba_PINT/ciftify_fmriprep/ZHH/out/
+doneReconAll=`cd ${outdir}/freesurfer ; ls -1d sub* | sort`
+
+for subject in $doneReconAll; do
+ cralog_lastline=`tail -3 ${outdir}/ciftify/$subject/cifti_recon_all.log | head -1`
+ echo $subject $cralog_lastline
+done | grep -v Done
+
+ResultsLogs=`cd ${outdir}/ciftify/sub*/MNINonLinear/Results/*/*.log`
+```
