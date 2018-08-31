@@ -7,25 +7,31 @@
 # ciftify_PINT_vertices - to run PINT
 # cifti_vis_PINT - to build PINT qc pages
 
-#SBATCH --nodes=1
-#SBATCH --cpus-per-task=80
-#SBATCH --time=11:00:00
-#SBATCH --job-name ciftify_p08
-#SBATCH --output=ciftify_p08_%j.txt
+# the inputs are:
+#   subject -> the surbect id example: "sub-02"
+#   func_base -> the bids bold base string example: "task-rhymejudgment_bold"
+#   outdir -> the base directory for all the derivaties example: $SCRATCH/bids_outputs/${dataset}/fmriprep_p05
+#   sing_home -> a ramdom empty folder to bind singularity's /home to example: sing_home=$SCRATCH/sing_home/ciftify/$dataset
+#   ciftify_container -> full path to the singularty container with the ciftify env inside
 
-subject="sub-02"
-func_base="task-rhymejudgment_bold"
-## build the mounts
-dataset="ds000003"
-sing_home=$SCRATCH/sing_home/ciftify/$dataset
-outdir=$SCRATCH/bids_outputs/${dataset}/fmriprep_p05
+subject=$1
+session=$2
+func_base=$3
+outdir=$4
+sing_home=$5
+ciftify_container=$6
 
-module load singularity
-module load gnu-parallel/20180322
+# subject="sub-02"
+# func_base="task-rhymejudgment_bold"
+# outdir=$SCRATCH/bids_outputs/${dataset}/fmriprep_p05
+# ciftify_container
+# sing_home=$SCRATCH/sing_home/ciftify/$dataset
 
-export ciftify_container=/scinet/course/ss2018/3_bm/2_imageanalysis/singularity_containers/tigrlab_fmriprep_ciftify_1.1.2-2.0.9-2018-07-31-d0ccd31e74c5.img
+##
+# module load singularity
+# module load gnu-parallel/20180322
 
-
+export ciftify_container
 
 mkdir -p ${outdir}/ciftify_clean_img/${subject}
 
@@ -45,41 +51,69 @@ mkdir -p ${outdir}/ciftify_clean_img/${subject}
 #   "--high-pass": 0.01,
 #   "--drop-dummy-TRs": 3,
 #   "--smooth-fwhm": 8
-#  }
 
-singularity exec \
+if [[ ${session} = *"ses"* ]]; then
+    mkdir -p ${outdir}/ciftify_clean_img/${subject}/${session}
+    singularity exec \
     -H ${sing_home} \
     -B ${outdir}:/output \
     ${ciftify_container} ciftify_clean_img \
-        --output-file=/output/ciftify_clean_img/${subject}/${subject}_${func_base}_desc-clean_bold.dtseries.nii \
+        --output-file=/output/ciftify_clean_img/${subject}/${session}/${subject}_${session}_${func_base}_desc-clean_bold.dtseries.nii \
         --clean-config=/output/ciftify_clean_img/24MP_8Phys_4GSR.json \
-        --confounds-tsv=/output/fmriprep/${subject}/func/${subject}_${func_base}_confounds.tsv \
+        --confounds-tsv=/output/fmriprep/${subject}/${session}/func/${subject}_${session}_${func_base}_confounds.tsv \
         --left-surface=/output/ciftify/${subject}/MNINonLinear/fsaverage_LR32k/${subject}.L.midthickness.32k_fs_LR.surf.gii \
         --right-surface=/output/ciftify/${subject}/MNINonLinear/fsaverage_LR32k/${subject}.R.midthickness.32k_fs_LR.surf.gii \
-        /output/ciftify/${subject}/MNINonLinear/Results/${func_base}/${func_base}_Atlas_s0.dtseries.nii
-
+        /output/ciftify/${subject}/MNINonLinear/Results/${session}_${func_base}/${session}_${func_base}_Atlas_s0.dtseries.nii
+else
+  singularity exec \
+      mkdir -p ${outdir}/ciftify_clean_img/${subject}
+      singularity exec \
+      -H ${sing_home} \
+      -B ${outdir}:/output \
+      ${ciftify_container} ciftify_clean_img \
+          --output-file=/output/ciftify_clean_img/${subject}/${subject}_${func_base}_desc-clean_bold.dtseries.nii \
+          --clean-config=/output/ciftify_clean_img/24MP_8Phys_4GSR.json \
+          --confounds-tsv=/output/fmriprep/${subject}/func/${subject}_${func_base}_confounds.tsv \
+          --left-surface=/output/ciftify/${subject}/MNINonLinear/fsaverage_LR32k/${subject}.L.midthickness.32k_fs_LR.surf.gii \
+          --right-surface=/output/ciftify/${subject}/MNINonLinear/fsaverage_LR32k/${subject}.R.midthickness.32k_fs_LR.surf.gii \
+          /output/ciftify/${subject}/MNINonLinear/Results/${func_base}/${func_base}_Atlas_s0.dtseries.nii
+fi
 # Step 2. Run PINT, this will run with the default radii or 6 6 12
 
 mkdir -p ${outdir}/ciftify_PINT/${subject}
 # for simplicity I have also moved the PINT <input-vertices.csv> file into this folder
 # example: cp ~/code/ciftify/ciftify/data/PINT/Yeo7_2011_80verts.csv ${outdir}/ciftify_PINT/
-singularity exec \
-    -H ${sing_home} \
-    -B ${outdir}:/output \
-    ${ciftify_container} ciftify_PINT_vertices --pcorr \
-      /output/ciftify_clean_img/${subject}/${subject}_${func_base}_desc-clean_bold.dtseries.nii \
-      /output/ciftify/${subject}/MNINonLinear/fsaverage_LR32k/${subject}.L.midthickness.32k_fs_LR.surf.gii \
-      /output/ciftify/${subject}/MNINonLinear/fsaverage_LR32k/${subject}.R.midthickness.32k_fs_LR.surf.gii \
-      /output/ciftify_PINT/Yeo7_2011_80verts.csv \
-      /output/ciftify_PINT/${subject}/${subject}_${func_base}_desc-clean_bold
 
-# Step 3. Generate PINT QC
-singularity exec \
-    -H ${sing_home} \
-    -B ${outdir}:/output \
-    ${ciftify_container} cifti_vis_PINT subject \
-      --ciftify-work-dir /output/ciftify/ \
-      --qcdir /output/ciftify_PINT/qc \
-      /output/ciftify_clean_img/${subject}/${subject}_${func_base}_desc-clean_bold.dtseries.nii \
-      ${subject} \
-      /output/ciftify_PINT/${subject}/${subject}_${func_base}_desc-clean_bold_summary.csv
+if [[ ${session} = *"ses"* ]]; then
+  mkdir -p ${outdir}/ciftify_PINT/${subject}/${session}
+  singularity exec \
+      -H ${sing_home} \
+      -B ${outdir}:/output \
+      ${ciftify_container} ciftify_PINT_vertices --pcorr \
+        /output/ciftify_clean_img/${subject}/${session}/${subject}_${session}_${func_base}_desc-clean_bold.dtseries.nii \
+        /output/ciftify/${subject}/MNINonLinear/fsaverage_LR32k/${subject}.L.midthickness.32k_fs_LR.surf.gii \
+        /output/ciftify/${subject}/MNINonLinear/fsaverage_LR32k/${subject}.R.midthickness.32k_fs_LR.surf.gii \
+        /output/ciftify_PINT/Yeo7_2011_80verts.csv \
+        /output/ciftify_PINT/${subject}/${session}/${subject}_${session}_${func_base}_desc-clean_bold
+else
+  mkdir -p ${outdir}/ciftify_PINT/${subject}
+  singularity exec \
+      -H ${sing_home} \
+      -B ${outdir}:/output \
+      ${ciftify_container} ciftify_PINT_vertices --pcorr \
+        /output/ciftify_clean_img/${subject}/${subject}_${func_base}_desc-clean_bold.dtseries.nii \
+        /output/ciftify/${subject}/MNINonLinear/fsaverage_LR32k/${subject}.L.midthickness.32k_fs_LR.surf.gii \
+        /output/ciftify/${subject}/MNINonLinear/fsaverage_LR32k/${subject}.R.midthickness.32k_fs_LR.surf.gii \
+        /output/ciftify_PINT/Yeo7_2011_80verts.csv \
+        /output/ciftify_PINT/${subject}/${subject}_${func_base}_desc-clean_bold
+fi
+# # Step 3. Generate PINT QC
+# singularity exec \
+#     -H ${sing_home} \
+#     -B ${outdir}:/output \
+#     ${ciftify_container} cifti_vis_PINT subject \
+#       --ciftify-work-dir /output/ciftify/ \
+#       --qcdir /output/ciftify_PINT/qc \
+#       /output/ciftify_clean_img/${subject}/${subject}_${func_base}_desc-clean_bold.dtseries.nii \
+#       ${subject} \
+#       /output/ciftify_PINT/${subject}/${subject}_${func_base}_desc-clean_bold_summary.csv
