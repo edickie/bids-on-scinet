@@ -4,7 +4,7 @@
 Hey Rea,
 
 Great to see you at the conference last month. Here;s the data we talked about for that
-new project. We tested 5 participant 4 months apart with diffusion, resting-state and our new favourite task.
+new project. We tested 5 participant 4 months apart with diffusion, resting-state and our new favorite task.
 
 The data is organized according to modality. I attached a spreadsheet of the participant demographics for you.
 
@@ -12,6 +12,125 @@ Looking forward to seeing how this project works out!
 Cole Labo
 ```
 
+Set-up for interactive bit.  
+
+```sh
+ssh <username>@teach.scinet.utoronto.ca
+module load singularity
+```
+
+This bit is will allow us to call the BIDS validator on the contents of the current directory
+
+```sh
+alias bids-validator='singularity run -H $PWD /scinet/course/ss2019/3/5_neuroimaging/containters/bids-validator.img'
+```
+
+This bit will add the raw data to your own scratch folder
+```sh
+cd $SCRATCH
+tar -xzf /scinet/course/ss2019/3/5_neuroimaging/data/ss2019_fake_cole_labo_data.tgz -C $SCRATCH
+```
+
+So let's deal with this..
+
+1. it looks like we have some 9 subject and 2 sessions so we can start by making directories for those.
+
+```sh
+mkdir cole_labo_bids
+cd cole_labo_bids
+for subject in "01" "02" "03" "04" "05" "06" "07" "08" "09"; do
+  mkdir sub-${subject}
+  mkdir sub-${subject}/ses-01
+  mkdir sub-${subject}/ses-02
+done
+```
+
+We have some anatomical data (with no session given) - after email Cole Labo we found out they are all session 1. So let's move them into ses-01/anat folder
+
+These are MPRAGE files (which is a Seimen's name for a T1w sequence). So we they should go in the anat folder with a `T1w` suffix.
+
+```sh
+cd $SCRATCH
+for subject in "01" "02" "03" "04" "05" "06" "07" "08" "09"; do
+  mkdir cole_labo_bids/sub-${subject}/ses-01/anat
+  cp cole_labo_data/anat/s${subject}_mprage.nii.gz cole_labo_bids/sub-${subject}/ses-01/anat/sub-${subject}_ses-01_T1w.nii.gz
+done
+```
+
+## Check with the BIDS-validator
+
+```sh
+cd $SCRATCH
+bids-validator --ignoreNiftiHeaders cole_labo_bids/
+```
+
+We also have some resting state functional data.  Looks like we have datae from both sessions (with se01 for session 1 and se02 for session 2). According to the BIDS spec. This goes in the "func" folder with "task-rest" in the filename.
+
+Note: as this runs - you might notice that one file is missing!
+
+```sh
+cd $SCRATCH
+for subject in "01" "02" "03" "04" "05" "06" "07" "08" "09"; do
+  for session in "01" "02"; do
+    mkdir cole_labo_bids/sub-${subject}/ses-${session}/func
+    cp cole_labo_data/rest/s${subject}_rest_se${session}.nii.gz cole_labo_bids/sub-${subject}/ses-${session}/func/sub-${subject}_ses-${session}_task-rest_bold.nii.gz
+  done
+done
+```
+
+We also have data from one task, after calling Dr Labo back, we found out that this task was only aquired in the second session (ses-02). Let's copy it there.
+
+```sh
+cd $SCRATCH
+for subject in "01" "02" "03" "04" "05" "06" "07" "08" "09"; do
+    session="02"
+    cp cole_labo_data/happytask/s${subject}_happybold.nii.gz cole_labo_bids/sub-${subject}/ses-${session}/func/sub-${subject}_ses-${session}_task-happy_bold.nii.gz
+done
+```
+
+Lastly we have the DWI images they belong in a new folder named DWI.
+
+```sh
+cd $SCRATCH
+for subject in "01" "02" "03" "04" "05" "06" "07" "08" "09"; do
+  for session in "01" "02"; do
+    mkdir cole_labo_bids/sub-${subject}/ses-${session}/dwi
+    cp cole_labo_data/DWI/s${subject}_dti_se${session}.nii.gz cole_labo_bids/sub-${subject}/ses-${session}/dwi/sub-${subject}_ses-${session}_dwi.nii.gz
+    cp cole_labo_data/DWI/s${subject}_dti_se${session}.bvec cole_labo_bids/sub-${subject}/ses-${session}/dwi/sub-${subject}_ses-${session}_dwi.bvec
+    cp cole_labo_data/DWI/s${subject}_dti_se${session}.bval cole_labo_bids/sub-${subject}/ses-${session}/dwi/sub-${subject}_ses-${session}_dwi.bval
+  done
+done
+```
+
+We add a README..
+
+```sh
+nano README
+```
+
+```
+This dataset was share with us from Dr Cole Laborator
+
+It includes the Happy task
+```
+
+We add a dataset_description.json
+
+```sh
+nano dataset_description.json
+```
+
+Then copy this inside
+
+```
+{
+    "BIDSVersion": "1.0.0",
+    "Name": "Fake Happy Task",
+    "Authors": ["Labo, C.", "Search, R"]
+}
+
+
+```
 
 Note to users:
 
@@ -121,4 +240,10 @@ cd /scratch/edickie/ss2019_bids_example_data/super_raw/
  2101  ls
  2102  rsync -av ss2019_fake_cole_labo_data.tgz edickie@niagara.scinet.utoronto.ca:/scinet/course/ss2019/3/data/
 
+```
+
+```sh
+neurodocker generate singularity --base=debian:stretch --pkg-manager=apt \
+  --neurodebian os_codename=stretch server=usa-nh \
+  --install datalad
 ```
