@@ -3,7 +3,7 @@
 ```
 Hey Rea,
 
-Great to see you at the conference last month. Here;s the data we talked about for that
+Great to see you at the conference last month. Here's the data we talked about for that
 new project. We tested 5 participant 4 months apart with diffusion, resting-state and our new favorite task.
 
 The data is organized according to modality. I attached a spreadsheet of the participant demographics for you.
