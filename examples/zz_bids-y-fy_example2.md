@@ -28,7 +28,7 @@ alias bids-validator='singularity run -H $PWD /scinet/course/ss2019/3/5_neuroima
 This bit will add the raw data to your own scratch folder
 ```sh
 cd $SCRATCH
-tar -xzf /scinet/course/ss2019/3/5_neuroimaging/data/ss2019_fake_cole_labo_data.tgz -C $SCRATCH
+tar -xzf /scinet/course/ss2019/3/5_neuroimaging/data/ss2019_cole_labo.tgz -C $SCRATCH
 ```
 
 So let's deal with this..

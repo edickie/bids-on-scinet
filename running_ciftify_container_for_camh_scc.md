@@ -248,3 +248,32 @@ for preprocfile in `ls ${outputdir}/fmriprep/sub-*/ses-*/func/sub-*_ses-*_task-r
 echo ${cleaning_script} ${subject} ${session} task-rest_bold ${outputdir} ${sing_home} ${ciftify_container} | qsub -V -l walltime=00:20:00,nodes=1:ppn=4 -N pint_${subject}_${session} -j oe -o ${outputdir}/../../ZHH/logs;
 done
 ```
+
+## add it turns out that we need to run the COBRE stuff on the SCC too...
+
+```sh
+ssh dev02
+bids_dir=/KIMEL/tigrlab/scratch/edickie/saba_PINT/ciftify_fmriprep/
+sing_home=/KIMEL/tigrlab/scratch/edickie/saba_PINT/sing_home
+mkdir -p $sing_home
+
+
+SIDlist=`cd ${bids_dir}/COBRE/COBRE; ls -1d sub* | sed 's/sub-//g'`
+cd /KIMEL/tigrlab/scratch/edickie/saba_PINT/ciftify_fmriprep
+mkdir -p COBRE/out COBRE/work COBRE/logs
+cd $sing_home
+for SID in $SIDlist; do
+  subject=$SID
+  echo singularity run -H ${sing_home}:/myhome \
+    -B ${bids_dir}:/bids \
+    -B /quarantine/Freesurfer/6.0.0/freesurfer/license.txt:/license_file.txt \
+    /KIMEL/tigrlab/archive/code/containers/FMRIPREP_CIFTIFY/tigrlab_fmriprep_ciftify_1.1.2-2.0.9-2018-07-31-d0ccd31e74c5.img \
+    /bids/COBRE/COBRE /bids/COBRE/out participant \
+    --participant_label=$SID \
+    --fmriprep-workdir /bids/COBRE/work \
+    --fs-license /license_file.txt \
+    --n_cpus 4 \
+    --fmriprep-args="--use-aroma"  | \
+    qsub -V -l walltime=23:00:00,nodes=1:ppn=4 -N ciftify_$SID -j oe -o ${bids_dir}/COBRE/logs;
+done
+```
