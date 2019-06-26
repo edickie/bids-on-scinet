@@ -1,64 +1,26 @@
 # Running a singularity container
 
-## fmriprep is one of the most popular - let's run fmriprep
+Note: for this demo, we could use any BIDS - they all have a very similar usage.
 
-BUT - for our demo we are going to run in "dryrun" which mean fmriprep will just start up and do nothing.
+We are going to use the ciftify pipeline because it have a "--dry-run" option that will print commands to the screen but do nothing..
+
+
 
 ## preamble - let's get the dataset with datalad?
 
 ```sh
 ssh <username>@teach.scinet.utoronto.ca
-module load git-annex/2.20.1  # we need this for datalad to work
-module load anaconda3         # in order for the conda load bit to work
-source activate /scinet/course/ss2019/3/5_neuroimaging/conda_envs/datalad
-
+module load singularity
 ```
 
-# one SciNet I will put the data in my $SCRATCH
+### check out downloading data with datalad for the download info..
 
-This install's the data - which for a dataset means that we get the "small" data (i.e. the text files)
-and the download instructions for the larger files
+we will test with ds000030 bids data.
 
-We can now navigate the dataset like it's a file system and plan our analysis
-
-```sh
-datalad install ///openfmri/ds000030
-```
-When we know what we want to run we can use the "get" command to download those files we need
-Let's get all the imaging files for sub-10171
-
-```sh
-cd ds000030
-datalad get sub-10171/
-```
-
-We can also use linux patterns here - i.e. lets get only the T1w images from teh first few subjects
-```sh
-datalad get sub-101*/anat/*T1w.nii.gz
-```
-
-When we are done our analysis. We can "drop" the data (i.e. delete the big files, but keep a record of where they came from)
-Note: the drop command will only run when datalad knows that another copy of that file exists somewhere (i.e. the server you download from).
-
-```sh
-datalad drop sub-1015*/anat/*T1w.nii.gz
-```
-
-Another note: in the first version we use the datalad "datasets" shortcut (`///` these are download links that the datalad developers have curated)
-But anyone can build a datalad repo, and these can be published to anywhere git repo's are housed.
-
-OpenNeuro Curates some of it's own repo's they are at:
-https://github.com/OpenNeuroDatasets
-
-Let's get another dataset using this.
-
-```sh
-datalad install https://github.com/OpenNeuroDatasets/ds000003.git
-```
-
-Note: I get a warning that I need to "enable a sibling" - just literally copy and paste the line and all other datalad functions should work..
 
 ## 02 actually running the container
+
+Note how all bids apps have a similar usage..
 
 ```sh
 mriqc bids-root/ output-folder/ participant --participant-label sub-10171
@@ -69,10 +31,16 @@ fmriprep bids-root/ output-folder/ participant --participant-label sub-10171 -w 
 ```
 
 ```sh
+ciftify_fmriprep bids-root/ output-folder/ participant --participant_label=10171
+```
+
+## Anatomy of a singularity run command  
+
+```sh
 singularity run <singularity-image> <arguments>
 ```
 
-WE have an fmriprep image in the /scinet/courses folder..
+For example - WE have an fmriprep image in the /scinet/courses folder..
 
 It has a crazy long name so we will set it at the top of our script
 
@@ -81,13 +49,14 @@ fmriprep_image=/scinet/course/ss2019/3/5_neuroimaging/containters/poldracklab_fm
 singularity run ${fmriprep_image} --help
 ```
 
-Note: in "participant" mode I recommend only calling fMRIprep on one participant at a time (and we only downloaded on participant of data)
-So let's tell it to only run the participant data we have
-(sub-10171 --> --participant_label 10171)
+We also have a ciftify container.
+
 ```sh
-fmriprep-image=/scinet/course/ss2019/3/5_neuroimaging/containters/poldracklab_fmriprep_1.3.2-2019-03-18-573e99cc5d39.simg
-singularity run ${fmriprep-image} bids-input/ output-folder/ participant --participant_label 10171
+ciftify_image=/scinet/course/ss2019/3/5_neuroimaging/containters/tigrlab_fmriprep_ciftify_1.3.0.post2-2.3.1-2019-04-04-8ebe3500bebf.img
+singularity run ${ciftify_image} --help
 ```
+
+
 
 When running on an HPC - there are two more things that are highly recommended. These give you something closer to way a
 Docker runs - i.e. a "clean" contained environment inside the containers
@@ -96,14 +65,25 @@ Docker runs - i.e. a "clean" contained environment inside the containers
     + this is especially important if to not let python enviroments from outside your container effect your pipeline
 
 ```sh
-singularity run --cleanenv ${fmriprep_image} --help
+singularity run --cleanenv ${ciftify_image} --help
 ```
 
 So that's great but what about running real data?
 i.e.
 
 ```sh
-fmriprep bids-root/ output-folder/ participant --participant-label sub-10171 -w work/
+fmriprep_ciftify bids-root/ output-folder/ participant
+```
+
+Note: in "participant" mode I recommend only calling bids-apps on one participant at a time (and we only downloaded on participant of data)
+So let's tell it to only run the participant data we have
+(sub-10171 --> --participant_label 10171)
+
+
+```sh
+ciftify_image=/scinet/course/ss2019/3/5_neuroimaging/containters/tigrlab_fmriprep_ciftify_1.3.0.post2-2.3.1-2019-04-04-8ebe3500bebf.img
+
+singularity run ${ciftify_image} bids-input/ output-folder/ participant --participant_label=10171
 ```
 
 BUT - we need to "bind" our data  - we think of our singularity image as a virtual machine, so we need to tell the "bind" our input and output folders to the image..
@@ -118,22 +98,6 @@ The escape character tells the computer to ignore the next charater afterwards (
 When copying this yourself - make sure that the `\` is present on everyline and that the next character after teh `\` is a return!
 
 
-```sh
-ciftify_image=/scinet/course/ss2019/3/5_neuroimaging/containters/tigrlab_fmriprep_ciftify_1.3.0.post2-2.3.1-2019-04-04-8ebe3500bebf.img
-singularity run ${ciftify_image} --help
-```
-
-```sh
-fmriprep_image=/scinet/course/ss2019/3/5_neuroimaging/containters/poldracklab_fmriprep_1.3.2-2019-03-18-573e99cc5d39.simg
-singularity run \
-  --cleanenv \
-  -B $SCRATCH/datalad/ds000030:/bids-input \
-  -B $SCRATCH/ds000030/fmriprep-out/:/output-folder \
-  ${fmriprep_image} \
-  /bids-input output-folder/ participant \
-  --participant_label 10171 \
-  --boilerplate
-```
 
 ```sh
 ciftify_image=/scinet/course/ss2019/3/5_neuroimaging/containters/tigrlab_fmriprep_ciftify_1.3.0.post2-2.3.1-2019-04-04-8ebe3500bebf.img
@@ -144,7 +108,7 @@ singularity run \
   ${ciftify_image} \
   /bids-input output-folder/ participant \
   --participant_label=10171 \
-  --debug
+  --anat_only --debug --dry-run
 ```
 
 Note: for fMRIprep and ciftify you need to also "BIND" the freesurfer license file into the container
@@ -157,16 +121,21 @@ We recommend you get one from FreeSurfer (it take 5min) but for now we will use 
 The last bit fails becuase there is no output directory - we need to create it first..
 
 ```sh
-fmriprep_image=/scinet/course/ss2019/3/5_neuroimaging/containters/poldracklab_fmriprep_1.3.2-2019-03-18-573e99cc5d39.simg
+ciftify_image=/scinet/course/ss2019/3/5_neuroimaging/containters/tigrlab_fmriprep_ciftify_1.3.0.post2-2.3.1-2019-04-04-8ebe3500bebf.img
+fs_license=/scinet/course/ss2019/3/5_neuroimaging/fs_license/license.txt
+
 mkdir -p $SCRATCH/ds000030/fmriprep-out
+
 singularity run \
   --cleanenv \
   -B $SCRATCH/datalad/ds000030:/bids-input \
   -B $SCRATCH/ds000030/fmriprep-out/:/output-folder \
-  ${fmriprep_image} \
-  bids-root/ output-folder/ participant \
-  --participant_label 10171 \
-  --boilerplate
+  -B ${fs_license}:/freesurfer_license.txt \
+  ${ciftify_image} \
+  /bids-input output-folder/ participant \
+  --participant_label=10171 \
+  --fs-license /freesurfer_license.txt \
+  --anat_only --debug --dry-run
 ```
 
 
@@ -188,9 +157,7 @@ singularity run \
   --anat_only --debug --dry-run
 ```
 
-## two more things to do...
-
-binding $HOME
+### binding $HOME
 
 Normally a singularity container has access to you $HOME directory. On SciNet we especially don't like this (because home is not writable within a job..)
 
@@ -214,7 +181,7 @@ singularity run \
   --anat_only --debug --dry-run
 ```
 
-## second last thing - for some apps we can make use of the $BBUFFER
+### second last thing - for some apps we can make use of the $BBUFFER
 
 fMRIprep and MRIQC are pipelines that are written with Nipype.
 
@@ -340,15 +307,3 @@ singularity run \
   --debug --resource-monitor --notrack
 
 ```
-
-Message Input
-Direct message with michael
-
-
-
-
-
-
-The _best_ place for these files to be on SciNet is the
-
-## Also - we want to up the number of processor

@@ -27,9 +27,9 @@ Note2:  If you use "docker run" on a container that dosen't exist on your system
 sudo docker run -it kaczmarj/neurodocker:0.5.0 --help
 ```
 
-Now you need to convert from singularity to docker - this uses a Docker image put out by singularity can docker2singularity
+Now you need to convert from docker to singularity -  this uses a Docker image put out by singularity called `docker2singularity`
 
-Note: we are using the "-v" mounts to give it two input paths
+Note: we are using the "-v" volume mounts to give it two input paths:
 
 + `/var/run/docker.sock` is the place were all your docker images are sitting
 + `/scratch/edickie` is the location where I want the output image to end up
@@ -50,6 +50,9 @@ cd /scratch/edickie
 ls -sh kaczmarj_neurodocker_0.5.0-2019-04-18-2fc25b0b83b7.img
 rsync -av  ./kaczmarj_neurodocker_0.5.0-2019-04-18-2fc25b0b83b7.img <username>@niagara.scinet.utoronto.ca:<path/on/scinet/>
 ```
+
+-----------------------------
+
 
 ## Same thing but with MRIQC (a larger container)
 
