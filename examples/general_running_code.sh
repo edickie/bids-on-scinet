@@ -3,8 +3,9 @@ WALLTIME="24:00:00"
 JOBS_PER_NODE=10
 CPU_PER_JOB=4
 JOBNAME="ciftify"
-ALLOC_NAME=
+ALLOC_NAME="sci-alloc"
 
+# put variables for the next bit here
 BIDS_DIR=$SCRATCH/datalad/ds000030
 OUTPUT_DIR=
 SUBMIT_DIR=
@@ -23,6 +24,7 @@ parallel echo "singularity run --cleanenv \
  --fs-license /fs_license.txt \
  --anat_only --debug --dry-run" ::: ${SUBJECTS} > mycmds.txt \
 
+if ALLOC_NAME=="none"
 qbatch --dryrun \
  -b slurm --nodes 1 --ppj 40 \
  --env none --header "module load singularity gnu-parallel" \
